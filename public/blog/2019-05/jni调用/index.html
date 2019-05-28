@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zn-Hans">
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1" />
+  <meta name="author" content="Elvis">
+  <meta name="description" content="Java JNI(Java Native Interface)调用C代码 linux 前言 之前在对接脱机终端动态二维码验签，需要在javaWeb中调用到C语言封装的动态so类库。本次记录是对本次经验的总结 java调用C代码总共分为5步 在com.gw.web.hpay.util.encrypt这个包下创建一个java类TestUseC.java,编写了一个native方法getNumber() 代码如下: package com.gw.web.hpay.util.encrypt; /** * @author Shugege * @Discription 调用C代码 * @Data 2018/9/28 * @Version 1.0.0 */ public class">
+  
+  <meta property="og:title" content="JNI调用" />
+<meta property="og:description" content="Java JNI(Java Native Interface)调用C代码 linux 前言 之前在对接脱机终端动态二维码验签，需要在javaWeb中调用到C语言封装的动态so类库。本次记录是对本次经验的总结 java调用C代码总共分为5步 在com.gw.web.hpay.util.encrypt这个包下创建一个java类TestUseC.java,编写了一个native方法getNumber() 代码如下: package com.gw.web.hpay.util.encrypt; /** * @author Shugege * @Discription 调用C代码 * @Data 2018/9/28 * @Version 1.0.0 */ public class" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://shuerwa.github.io/blog/2019-05/jni%E8%B0%83%E7%94%A8/" />
+<meta property="article:published_time" content="2019-05-10T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-05-10T00:00:00&#43;00:00"/>
+
+
+
+  <title>
+  
+       JNI调用 | Elvis 
+  
+  </title>
+
+  <link rel="canonical" href="https://shuerwa.github.io/blog/2019-05/jni%E8%B0%83%E7%94%A8/">
+
+  
+  
+
+  
+  <link href="https://shuerwa.github.io/css/vendors-extensions/fontawesome/all.min.css" rel="stylesheet">
+
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700|Ubuntu+Mono:400,400i,700,700i|Raleway:300,400,500,600">
+  <link href="https://shuerwa.github.io/css/font.css" rel="stylesheet"> 
+    
+  
+  <link href="https://shuerwa.github.io/css/vendors/bootstrap4/bootstrap.min.css" rel="stylesheet">
+  <link href="https://shuerwa.github.io/css/vendors-extensions/mdb/mdb.min.css" rel="stylesheet"> 
+  <link href="https://shuerwa.github.io/css/vendors/mdb/style.min.css" rel="stylesheet"> 
+  <link href="https://shuerwa.github.io/css/main.css" rel="stylesheet">
+
+
+  
+  <link rel="shortcut icon"
+  
+      href="https://shuerwa.github.io/img/shu.png"
+  
+  >
+
+
+  
+  
+
+  <style type="text/css">
+      @media (min-width: 800px) and (max-width: 850px) {
+              .navbar:not(.top-nav-collapse) {
+                  background: #1C2331!important;
+              }
+          }
+  </style>
+
+
+  
+    
+    <link rel="stylesheet" href="https://shuerwa.github.io/js/vendors/katex/katex.min.css">
+  
+  
+
+  
+    
+    <link rel="stylesheet" href="https://shuerwa.github.io/css/vendors/highlight/github-gist.css">
+  
+
+</head>
+
+  <body class="bg-light" data-spy="scroll" data-target="#page-scrollspy" data-offset="90">
+  
+    
+    
+
+    
+      
+
+
+<nav class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar">
+    <div class="container">
+
+      
+      <a class="navbar-brand" href="https://shuerwa.github.io/">
+          
+        <img class="avatar" src="https://shuerwa.github.io/img/shu.png" style="width: 40px!important;height: auto;"  class="d-inline-block align-top" alt="" >
+        
+        <strong> Elvis</strong>
+      </a>
+
+      
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+        
+        <ul class="navbar-nav mr-auto ">
+          <li class="nav-item ">
+            <a class="nav-link" href="https://shuerwa.github.io/">Home</a>
+          </li>
+             
+            <li class="nav-item ">
+              <a class="nav-link" href="https://shuerwa.github.io/blog/" >Blog  </a>
+            </li>
+          
+             
+            <li class="nav-item ">
+              <a class="nav-link" href="https://shuerwa.github.io/moment/" >Moment  </a>
+            </li>
+          
+             
+            <li class="nav-item ">
+              <a class="nav-link" href="https://shuerwa.github.io/about/" >About  </a>
+            </li>
+          
+          
+        </ul>
+
+      </div>
+
+    </div>
+  </nav>
+  
+ 
+      
+ 
+
+
+
+
+
+
+<div id="site-header" class="carousel slide carousel-fade" data-ride="carousel" style="height: 18rem;" >  
+
+  
+  
+  
+
+  
+  <div class="carousel-inner" role="listbox">
+    
+      
+
+        
+        <div class="carousel-item active">
+          <div class="view" style="background-image: url('https://shuerwa.github.io/img/header-slides/raw_1515691746.jpg'); background-repeat: no-repeat; background-size: cover;">
+
+            
+            <div class="mask rgba-black-light d-flex justify-content-center align-items-center">
+
+              
+              
+              
+
+            </div>
+            
+
+          </div>
+        </div>
+        
+      
+    
+      
+
+        
+        <div class="carousel-item">
+          <div class="view" style="background-image: url('https://shuerwa.github.io/img/header-slides//raw_1515847341.jpg'); background-repeat: no-repeat; background-size: cover;">
+
+            
+            <div class="mask rgba-black-light d-flex justify-content-center align-items-center">
+
+            
+
+            </div>
+            
+
+          </div>
+        </div>
+        
+      
+    
+
+  
+  </div>
+  
+
+  
+  <div class="carousel-content text-center white-text wow fadeIn">
+    <div class="row mx-0 headfont mt-3 pt-4">
+      
+      <div class="col-12 col-sm-5 align-middle">
+        <a href="https://shuerwa.github.io/">
+          
+            <img class="pull-right avatar avatar-md" src="https://shuerwa.github.io/img/profile.jpg" alt="" >
+          
+        </a>
+      </div>
+      
+      <div class="col-12 col-sm-7 text-left pl-2">
+        <a href="https://shuerwa.github.io/">
+          <h1 class="mb-2 h1" style="font-weight: 300;" >
+            <strong>Elvis</strong>
+          </h1>
+        </a>
+        
+
+             
+        <div class="mt-2" style="font-size: 1rem; color: white;">
+            
+              <a href="https://github.com/shuerwa/" target="_blank" rel="noopener"><i class="fab fa-github pr-1" aria-hidden="true"></i></a>    
+            
+            
+              <a href="//linkedin.com/in/you" target="_blank" rel="noopener"><i class="fab fa-linkedin pr-1" aria-hidden="true"></i></a>
+            
+
+            
+              <a href="//facebook.com/you" target="_blank" rel="noopener"><i class="fab fa-facebook pr-1" aria-hidden="true"></i></a>
+            
+
+            
+            <a href="//google.com/you" target="_blank" rel="noopener"><i class="fab fa-google-plus pr-1" aria-hidden="true"></i></a>
+            
+
+            
+                <a href="//twitter.com/you" target="_blank" rel="noopener"><i class="fab fa-twitter pr-1" aria-hidden="true"></i></a>
+            
+
+            
+                <a href="//instagram.com/you" target="_blank" rel="noopener"><i class="fab fa-instagram pr-1" aria-hidden="true"></i></a>
+            
+    
+            
+                <a href="//px500" target="_blank" rel="noopener"><i class="fab fa-500px pr-1" aria-hidden="true"></i></a>
+            
+    
+        
+            
+                <a href="mailto:shu2lili@163.com"><i class="far fa-envelope-open pr-1" aria-hidden="true"></i></a>
+            
+    
+            
+
+            
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  
+  
+  
+
+</div>
+  
+    
+
+    
+  
+  <main class="post-main-wrapper">
+    
+    
+    <div class="row">
+
+      
+
+      
+      <div class="col-md-10">
+      
+
+        
+        <div class="z-depth-1  post-wrapper white-bg single-post">
+
+          <div class="post-header text-center" >
+  <ul class="post-meta li-x">
+    
+      
+        <li><a href="https://shuerwa.github.io/categories/java%E5%9F%BA%E7%A1%80"><i class="fas fa-folder-open pr-1" aria-hidden="true"></i> Java基础 </a></li>
+      
+    
+    
+      
+        <li><a href="https://shuerwa.github.io/series/jni%E8%B0%83%E7%94%A8"><i class="fas fa-bookmark pr-1" aria-hidden="true"></i>JNI调用</a></li>
+      
+    
+  </ul>
+
+  <div class="px-4 post-heading">JNI调用</div>
+
+  <ul class="post-meta li-x mt-1">
+    
+      <li>May 10, 2019</li>
+    
+
+    
+      <li class="middot"></li>
+      <li>3 minutes read</li>
+    
+  </ul>
+  
+
+</div>
+
+
+          <div class="post-content markdown">
+            
+
+<h2 id="java-jni-java-native-interface-调用c代码-linux">Java JNI(Java Native Interface)调用C代码  linux</h2>
+
+<hr />
+
+<h4 id="前言">前言</h4>
+
+<ul>
+<li>之前在对接脱机终端动态二维码验签，需要在javaWeb中调用到C语言封装的动态so类库。本次记录是对本次经验的总结 java调用C代码总共分为5步<br /></li>
+</ul>
+
+<hr />
+
+<ol>
+<li>在<strong>com.gw.web.hpay.util.encrypt</strong>这个包下创建一个java类<strong>TestUseC.java</strong>,编写了一个native方法<strong>getNumber()</strong><br /></li>
+</ol>
+
+<pre><code class="language-java">代码如下:
+package com.gw.web.hpay.util.encrypt;
+
+/**
+ * @author Shugege
+ * @Discription 调用C代码
+ * @Data 2018/9/28
+ * @Version 1.0.0
+ */
+public class TestUseC {
+    static {
+        /* 1. load */
+        System.loadLibrary(&quot;native&quot;); /*libnative.so*/
+    }
+    public native int getNumber();
+    public static  void main( String args[] )
+    {
+        /* 2. java &lt;--&gt; C */
+
+        /* 3. call */
+        final TestUseC c = new TestUseC();
+        System.out.println( c.getNumber() );
+    }
+}
+
+</code></pre>
+
+<p>2.通过 <strong>javah</strong> 生成C语言的头文件例如:<strong>TestUseC.java</strong>的全路径为：<strong>D:\pay\dev\web\gw-web-hpay\src\main\java\com\gw\web\hpay\util\encrypt\TestUseC.java</strong> ,javah应该在包的<strong>根路径</strong>执行</p>
+
+<hr />
+
+<pre><code>D:\pay\dev\web\gw-web-hpay\src\main\java\com\gw\web\hpay\util\encrypt&gt;cd ..
+
+D:\pay\dev\web\gw-web-hpay\src\main\java\com\gw\web\hpay\util&gt;cd ..
+
+D:\pay\dev\web\gw-web-hpay\src\main\java\com\gw\web\hpay&gt;cd ..
+
+D:\pay\dev\web\gw-web-hpay\src\main\java\com\gw\web&gt;cd ..
+
+D:\pay\dev\web\gw-web-hpay\src\main\java\com\gw&gt;cd ..
+
+D:\pay\dev\web\gw-web-hpay\src\main\java\com&gt;cd ..
+
+D:\pay\dev\web\gw-web-hpay\src\main\java&gt;javah com.gw.web.hpay.util.encrypt.TestUseC
+</code></pre>
+
+<p><strong>生成结果如下 （文件名com_gw_web_hpay_util_encrypt_TestUseC.h）</strong>：</p>
+
+<pre><code class="language-C">/* DO NOT EDIT THIS FILE - it is machine generated */
+#include &lt;jni.h&gt;
+/* Header for class com_gw_web_hpay_util_encrypt_TestUseC */
+
+#ifndef _Included_com_gw_web_hpay_util_encrypt_TestUseC
+#define _Included_com_gw_web_hpay_util_encrypt_TestUseC
+#ifdef __cplusplus
+extern &quot;C&quot; {
+#endif
+/*
+ * Class:     com_gw_web_hpay_util_encrypt_TestUseC
+ * Method:    getNumber
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_com_gw_web_hpay_util_encrypt_TestUseC_getNumber
+  (JNIEnv *, jobject);//类型(jint) Java_package_Class_method
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+</code></pre>
+
+<p><strong>编写c语言代码（TestUseC.c）:</strong></p>
+
+<pre><code>#include &quot;com_gw_web_hpay_util_encrypt_TestUseC.h&quot;
+ 
+JNIEXPORT jint JNICALL Java_com_gw_web_hpay_util_encrypt_TestUseC_getNumber
+  (JNIEnv *env, jobject obj) //记得给参数提供别名 如*env obj
+{
+    
+    return 66;
+}
+
+</code></pre>
+
+<p><strong>Class</strong>对应java的全类名：<strong>com.gw.web.hpay.util.encrypt.TestUseC</strong><br />
+返回类型(jint==&gt;int ) Java_package_Class_method<br />
+3. 将生成的XXX.c,xxx.h文件上传到linux服务器<br />
+<strong>Linux</strong>下生成共享库,分为两步:<br />
+    1. 编译并生成.o文件,命令行如下:<strong>echo $JAVA_HOME</strong>获取JDK路径如：/usr/java/jdk1.7.0
+    2. 生成动态库文件<strong>libnative.so</strong> 如下图所示:</p>
+
+<pre><code>#-fPIC; 代表编译为位置独立的代码，满足了不同的进程对所加载动态库的共享;
+#-c; 表示只编译源文件但不链接;
+#$&lt;; 表示所搜索到与第一个相匹配的文件，即第一个[.c]文件；
+#-o; 指定输出文件名;
+#$@; 与[.c]文件相对应的[.o]文件；
+#-I.; 需用到的头文件在本目录中找.
+#-shared;生成动态库
+
+---------------------
+#命令1 从 /usr/java/jdk1.7.0/include 中寻找头文件jni.h 
+而jni.h需要从 /usr/java/jdk1.7.0/include/linux/ 中找到jni_md.h的头文件，所以有了如下命令
+gcc -I /usr/java/jdk1.7.0/include -I /usr/java/jdk1.7.0/include/linux/ -fPIC -c TestUseC.c
+#命令2 
+gcc -shared -fPIC -o libnative.so TestUseC.o
+</code></pre>
+
+<ol>
+<li>将文件放入 <strong>libnative.so</strong> 放入web应用 <strong>WEB-INF</strong> 下。(<strong>java -XshowSettings:properties</strong>可以查看java环境配置信息)System.loadLibrary()方法会从<br />
+1)和jre相关的一些目录<br />
+2)程序当前目录(echo $PATH可查看)<br />
+3)Windows目录<br />
+4)系统目录(system32)<br />
+5)系统环境变量path指定目录<br />
+中查找并加载动态库</li>
+
+<li><p>打包放入tomcat启动tomcat并访问应用结果如下:<br />
+<img src="https://raw.githubusercontent.com/shuerwa/newRepositoryReal/master/jniResult.png" alt="JNI支付结果" /></p>
+
+<h4 id="总结">总结</h4>
+
+<p>在对接过程中，如果对方直接提供*.so文件的动态类库，可以通过nm命令查看文件中的类名，方法名方便你编写java类。</p></li>
+</ol>
+
+<h2 id="版本控制">版本控制</h2>
+
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Action</th>
+<th>Time</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1.0</td>
+<td>Init 从有道云笔记移出</td>
+<td>2019-05-10</td>
+</tr>
+</tbody>
+</table>
+
+          </div>
+
+          
+          <div class="row">
+            <div class="col-md-8">
+            
+              <div class="mb-5">
+                
+<div class="li-x div-x post-meta">
+  <li class="pr-0"><a href="https://shuerwa.github.io/tags/"><i class="fas fa-tags"></i></a></li>
+  <div class="tags-sm">
+    
+      <li><a href="https://shuerwa.github.io/tags/java" role="button">java </a></li>
+      
+    
+  </div>
+</div>
+              </div>
+            
+            </div>
+            
+          </div>
+          
+
+          
+          <div class="row pt-3">
+            <div class="col-md-6">
+              
+                <a href=https://shuerwa.github.io/blog/2019-05/jvm%E8%B0%83%E4%BC%98/ class="post-meta">Previous
+                  <div class="pt-2 pb-5 d-flex">
+                    <i class="fas fa-angle-left text-grey font-weight-bold mr-2 active-color"></i>
+                    <span>JVM调优</span>
+                  </div>
+                </a>
+              
+            </div>
+            
+            <div class="col-md-6 text-right" >
+              
+            </div>
+          </div>
+
+          
+
+        </div>
+        
+
+      </div>
+      
+
+      
+	
+	
+	
+	
+		
+		
+		
+	
+
+		
+		<div class="col-md-2 pl-0">
+
+			
+			<div id="page-scrollspy" class="toc-nav">
+				
+				<ul class="nav nav-pills ml-0">
+					
+					<li class="nav-item pb-3 text-center">
+						<span class="font-weight-bold mb-2">- CATALOG - </span>
+					</li>
+
+					
+						
+						
+							
+								
+								
+									<ul class="nav">
+								
+								
+
+										<li class="nav-item">
+						 					<a class="nav-link" href="#java-jni-java-native-interface-%e8%b0%83%e7%94%a8c%e4%bb%a3%e7%a0%81-linux">
+												 Java JNI(Java Native Interface)调用C代码 linux
+											</a>
+										</li>
+						 
+								
+								
+									</ul>
+								
+							
+						
+				 
+						
+						
+							
+								
+								
+									<ul class="nav">
+								
+									<ul class="nav">
+								
+									<ul class="nav">
+								
+								
+
+										<li class="nav-item">
+						 					<a class="nav-link" href="#%e5%89%8d%e8%a8%80">
+												 前言
+											</a>
+										</li>
+						 
+								
+								
+									</ul>
+								
+									</ul>
+								
+									</ul>
+								
+							
+						
+				 
+						
+						
+							
+								
+								
+									<ul class="nav">
+								
+									<ul class="nav">
+								
+									<ul class="nav">
+								
+								
+
+										<li class="nav-item">
+						 					<a class="nav-link" href="#%e6%80%bb%e7%bb%93">
+												 总结
+											</a>
+										</li>
+						 
+								
+								
+									</ul>
+								
+									</ul>
+								
+									</ul>
+								
+							
+						
+				 
+						
+						
+							
+								
+								
+									<ul class="nav">
+								
+								
+
+										<li class="nav-item">
+						 					<a class="nav-link" href="#%e7%89%88%e6%9c%ac%e6%8e%a7%e5%88%b6">
+												 版本控制
+											</a>
+										</li>
+						 
+								
+								
+									</ul>
+								
+							
+						
+				 
+
+				</ul>
+			</div>
+			
+
+		</div>
+		
+	
+
+    </div>
+    
+
+
+  </main>
+  
+
+
+    
+    
+
+<footer class="page-footer text-center font-small mt-4 wow fadeIn">
+
+
+  
+  <div class="pb-2 mt-5 pt-5">
+    
+      <a href="https://github.com/shuerwa/ " target="_blank" rel="noopener"><i class="fab fa-github mr-3" aria-hidden="true"></i></a>    
+    
+    
+      <a href="//linkedin.com/in/you" target="_blank" rel="noopener"><i class="fab fa-linkedin-in mr-3" aria-hidden="true"></i></a>
+    
+
+    
+      <a href="//facebook.com/you" target="_blank" rel="noopener"><i class="fab fa-facebook-f mr-3" aria-hidden="true"></i></a>
+    
+
+    
+    <a href="//google.com/you" target="_blank" rel="noopener"><i class="fab fa-google-plus-g mr-3" aria-hidden="true"></i></a>
+    
+
+    
+        <a href="//twitter.com/you" target="_blank" rel="noopener"><i class="fab fa-twitter mr-3" aria-hidden="true"></i></a>
+    
+
+    
+        <a href="//instagram.com/you" target="_blank" rel="noopener"><i class="fab fa-instagram mr-3" aria-hidden="true"></i></a>
+    
+
+    
+        <a href="//px500" target="_blank" rel="noopener"><i class="fab fa-500px mr-3" aria-hidden="true"></i></a>
+    
+
+
+    
+        <a href="mailto:shu2lili@163.com"><i class="far fa-envelope-open mr-3" aria-hidden="true"></i></a>
+    
+
+    
+
+    
+
+  </div>
+  
+
+  
+  <div class="copyright py-4">
+    
+    <span>  2016 - 2019 &copy; | Theme <a href='https://github.com/orianna-zzo/AllinOne' target="_blank">AllinOne</a> by <a href='https://github.com/orianna-zzo' target="_blank">Orianna</a>  </span>
+  </div>
+  
+
+</footer>
+
+
+    
+
+
+
+
+
+
+<script type="text/javascript" src="https://shuerwa.github.io/js/vendors/jquery/jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="https://shuerwa.github.io/js/vendors/jquery/jquery.smooth-scroll.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://shuerwa.github.io/js/vendors/popper.min.js"></script>
+<script type="text/javascript" src="https://shuerwa.github.io/js/vendors/holder.min.js"></script>
+<script type="text/javascript" src="https://shuerwa.github.io/js/vendors-extensions/bootstrap4/bootstrap.js" ></script>
+
+<script type="text/javascript" src="https://shuerwa.github.io/js/vendors/mdb/mdb.min.js"></script>
+
+<script type="text/javascript" src="https://shuerwa.github.io/js/main.js"></script>
+
+
+
+  
+  <script src="https://shuerwa.github.io/js/vendors/highlight.pack.js"> </script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+ 
+  <script src="https://shuerwa.github.io/js/vendors/katex/katex.min.js"> </script>
+  <script src="https://shuerwa.github.io/js/vendors/katex/contrib/auto-render.min.js"></script>
+
+  <script>
+      document.addEventListener("DOMContentLoaded", function () {
+          renderMathInElement(document.body);
+      });
+  </script>
+
+
+
+
+
+
+
+
+<script type="text/javascript">
+  
+  new WOW().init();
+</script>
+
+
+
+
+  </body>
+</html>

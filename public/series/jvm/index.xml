@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>JVM on Elvis</title>
+    <link>https://shuerwa.github.io/series/jvm/</link>
+    <description>Recent content in JVM on Elvis</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zn-Hans</language>
+    <lastBuildDate>Fri, 10 May 2019 10:23:48 +0800</lastBuildDate>
+    
+	<atom:link href="https://shuerwa.github.io/series/jvm/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>JVM调优</title>
+      <link>https://shuerwa.github.io/blog/2019-05/jvm%E8%B0%83%E4%BC%98/</link>
+      <pubDate>Fri, 10 May 2019 10:23:48 +0800</pubDate>
+      
+      <guid>https://shuerwa.github.io/blog/2019-05/jvm%E8%B0%83%E4%BC%98/</guid>
+      <description>原则 多数的Java应用不需要在服务器上进行GC优化； 多数导致GC问题的Java应用，都不是因为我们参数设置错误，而是代码问题； 在应用上线之前，先考虑将机器的JVM参数设置到最优（最适合）； 减少创建对象的数量； 减少使用全局变量和大对象； GC优化是到最后不得已才采用的手段； 在实际使用中，分析GC情况优化代码比优化GC参数要多得多； 目的 将转移到老年代的对象数量降低到最小 （降低full GC次数）； 减少fu</description>
+    </item>
+    
+  </channel>
+</rss>
